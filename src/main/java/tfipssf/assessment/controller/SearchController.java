@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,7 +22,7 @@ public class SearchController {
     private final Logger logger = Logger.getLogger("from the searchcontroller:");
     @Autowired BookService service;
 
-    @GetMapping
+    @PostMapping
     public String searchByTitle(@RequestParam String bookName, Model modelobj){
     modelobj.addAttribute("book1", bookName);
 
@@ -29,8 +30,13 @@ public class SearchController {
     HashMap<String,String> searchResults=service.search(bookName);
     modelobj.addAttribute("results", searchResults);
         logger.log(Level.INFO,""+searchResults);
+
+        modelobj.addAttribute("urlkeys", service.getKeyForUrl());
+        logger.log(Level.INFO, "list is "+service.getKeyForUrl());
+
+        modelobj.addAttribute("booktitles", service.getBookTitles());
     return "SearchResult";
     }
-    
+
   
 }

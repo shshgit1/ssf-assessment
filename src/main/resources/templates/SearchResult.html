@@ -9,10 +9,17 @@
 <body>
     <h1>search results for</h1>
         <p th:text=${book1}></p>
-        <!-- <p th:text=${results}></p> -->
-        <ul th:each="searchresult:${results}">
-            <li th:text=${searchresult}></li>
-        </ul>
-    
+        <table border=2>
+
+            <tr>
+                <td th:each="titles:${booktitles}"><span th:text=${titles}></span></td>
+            </tr>
+            <tr>
+                <td th:each="key:${urlkeys}"><a th:href=${key}>link</a></td>
+            </tr>
+     
+        </table>
+        
+    <a href="/">back</a>
 </body>
 </html>

@@ -2,7 +2,9 @@ package tfipssf.assessment.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -14,10 +16,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import io.lettuce.core.dynamic.annotation.Key;
 import jakarta.json.Json;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonReader;
+import tfipssf.assessment.Model.BookModel;
 import tfipssf.assessment.Repository.BookRepository;
 
 @Service
@@ -26,24 +30,29 @@ public class BookService {
     //String url_openlib="http://openlibrary.org/search.json?q=the+lord+of+the+rings";
     String url_openlib="http://openlibrary.org/search.json";
     int NumberOfResults=20;
+    
+    List<String> urlkeys=new ArrayList<>();
+    List<String> bookTitles=new ArrayList<>();
 
     @Autowired BookRepository bookrepo;
 
 public HashMap<String, String> search (String searchTerm){
- 
-
          final String url = UriComponentsBuilder
                 .fromUriString(url_openlib)
                 .queryParam("q", searchTerm.trim().replace(" ","+"))
                 .queryParam("limit", NumberOfResults)
                 .toUriString(); 
 
+        
+
+
         RequestEntity req=RequestEntity.get(url).build();
         RestTemplate temple=new RestTemplate();
         ResponseEntity<String> resp=temple.exchange(req, String.class);
 
         if (resp.getStatusCode()!=HttpStatus.OK)
-        throw new IllegalArgumentException("eerrrror!");
+        throw new IllegalArgumentException("Error: status code %s"
+        .formatted(resp.getStatusCode().toString()));
 
         String body=resp.getBody();
 
@@ -53,7 +62,7 @@ public HashMap<String, String> search (String searchTerm){
         JsonArray objInDocs= result.getJsonArray("docs");
 
        // List<String> searchResultList=new ArrayList<>();
-            HashMap<String, String> searchResultList=new HashMap<>();
+           HashMap<String, String> searchResultList=new HashMap<>();
         for(int x=0;x<objInDocs.size();x++){
        
         if (objInDocs.getJsonObject(x).getBoolean("has_fulltext")==true){
@@ -64,25 +73,38 @@ public HashMap<String, String> search (String searchTerm){
         logger.log(Level.INFO, "title is "+titleOfBook);
 
        // searchResultList.add(titleOfBook);
-       searchResultList.put(KeyOfBook,titleOfBook);
-        }//end if
-        
-        }//end for
        
-                
+       String urlkey=KeyOfBook.substring(7);
+       String urlkeylink="/book/"+urlkey;
+       urlkeys.add(urlkeylink);
+       bookTitles.add(titleOfBook);
+
+
+       searchResultList.put(KeyOfBook,titleOfBook);
+
+
+       bookrepo.save(KeyOfBook, titleOfBook);
+        }//end if
+        }//end for
         return searchResultList;
        
-        }
+        }//end try
         catch (Exception e)
         {
             e.printStackTrace();
             return null;
-        }
+        }//end catch
 
+    } //end search method
 
-       
+    public List getKeyForUrl(){
+        return urlkeys;
     }
-
+    
+    public List getBookTitles(){
+        return bookTitles;
+    }
+   
     public void savetorepo(String a, String b){
         bookrepo.save(a,b);
     }
@@ -90,6 +112,76 @@ public HashMap<String, String> search (String searchTerm){
     public void retrieveFromRepo(String key){
         bookrepo.retrieve(key);
     }
+
+    public String searchbyID(String id){
+        final String url = UriComponentsBuilder
+                .fromUriString(url_openlib)
+                .queryParam("q", id)
+                .queryParam("limit", NumberOfResults)
+                .toUriString(); 
+
+                logger.log(Level.INFO, "from id search: "+id);
+
+                RequestEntity req=RequestEntity.get(url).build();
+                RestTemplate temple=new RestTemplate();
+                ResponseEntity<String> resp=temple.exchange(req, String.class);
+        
+                if (resp.getStatusCode()!=HttpStatus.OK)
+                throw new IllegalArgumentException("Error: status code %s"
+                .formatted(resp.getStatusCode().toString()));
+        
+                String body=resp.getBody();
+        
+                try (InputStream is=new ByteArrayInputStream(body.getBytes())){
+                JsonReader reader= Json.createReader(is);
+                JsonObject result=reader.readObject();
+                JsonArray objInDocs= result.getJsonArray("docs");
+
+                String titleOfBook=(String)objInDocs.getJsonObject(0).getString("title");
+               // String KeyOfBook=(String)objInDocs.getJsonObject(x).getString("key");
+               logger.log(Level.INFO, "in id search title is "+titleOfBook);
+        
+               return titleOfBook;
+                }
+                catch(Exception e)
+                {e.printStackTrace();
+                    return null;
+                }
+
+    }//end searchbyID
+
+    public String getDescription(String works_id){
+        final String url = UriComponentsBuilder
+        .fromUriString("https://openlibrary.org/works/"+works_id+".json")
+        .queryParam("q", "description")
+        .toUriString(); 
+
+        RequestEntity req=RequestEntity.get(url).build();
+        RestTemplate temple=new RestTemplate();
+        ResponseEntity<String> resp=temple.exchange(req, String.class);
+
+        if (resp.getStatusCode()!=HttpStatus.OK)
+        throw new IllegalArgumentException("Error: status code %s"
+        .formatted(resp.getStatusCode().toString()));
+
+        String body=resp.getBody();
+
+        try (InputStream is=new ByteArrayInputStream(body.getBytes())){
+        JsonReader reader= Json.createReader(is);
+        JsonObject result=reader.readObject();
+
+        String descriptionOfBook=result.getString("description");
+       
+       logger.log(Level.INFO, "description is "+descriptionOfBook);
+
+       return descriptionOfBook;
+        }
+        catch(Exception e)
+        {e.printStackTrace();
+            return "no description found";
+        }
+    }//end getdescription
+
     
 
 }
