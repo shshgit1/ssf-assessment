@@ -24,5 +24,12 @@ public class BookRepository implements Serializable {
         return redTemplate.opsForValue().get(Key);
     }
 
+    public boolean checkifcache(String works_id){
+        if (redTemplate.hasKey(works_id)){
+        return true;
+        }
+        else return false;
+    }
+
 
 }

@@ -220,6 +220,10 @@ public HashMap<String, String> search (String searchTerm){
             return "no excerpt found";
         }
     }//end getdescription
-
+    
+    public boolean checkifcache(String works_id){
+        
+        return bookrepo.checkifcache(works_id);
+    }
 
 }
