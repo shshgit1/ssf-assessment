@@ -9,9 +9,9 @@
 <body>
     <h1>search results for</h1>
         <p th:text=${book1}></p>
-        <p th:text=${results}></p>
-        <ul>
-            <li></li>
+        <!-- <p th:text=${results}></p> -->
+        <ul th:each="searchresult:${results}">
+            <li th:text=${searchresult}></li>
         </ul>
     
 </body>

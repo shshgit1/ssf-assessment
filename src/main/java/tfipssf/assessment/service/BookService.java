@@ -2,13 +2,9 @@ package tfipssf.assessment.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import com.fasterxml.jackson.databind.annotation.JacksonStdImpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-
 
 import jakarta.json.Json;
 import jakarta.json.JsonArray;
@@ -62,6 +57,7 @@ public HashMap<String, String> search (String searchTerm){
         for(int x=0;x<objInDocs.size();x++){
        
         if (objInDocs.getJsonObject(x).getBoolean("has_fulltext")==true){
+            
         String titleOfBook=(String)objInDocs.getJsonObject(x).getString("title");
         String KeyOfBook=(String)objInDocs.getJsonObject(x).getString("key");
 
