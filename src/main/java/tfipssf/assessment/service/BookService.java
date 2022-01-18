@@ -16,12 +16,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import io.lettuce.core.dynamic.annotation.Key;
 import jakarta.json.Json;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonReader;
-import tfipssf.assessment.Model.BookModel;
 import tfipssf.assessment.Repository.BookRepository;
 
 @Service
@@ -83,7 +81,7 @@ public HashMap<String, String> search (String searchTerm){
        searchResultList.put(KeyOfBook,titleOfBook);
 
 
-       bookrepo.save(KeyOfBook, titleOfBook);
+       bookrepo.save(urlkey, titleOfBook);
         }//end if
         }//end for
         return searchResultList;
@@ -113,14 +111,13 @@ public HashMap<String, String> search (String searchTerm){
         bookrepo.retrieve(key);
     }
 
-    public String searchbyID(String id){
+    public String searchbyID(String works_id){
         final String url = UriComponentsBuilder
-                .fromUriString(url_openlib)
-                .queryParam("q", id)
-                .queryParam("limit", NumberOfResults)
-                .toUriString(); 
+        .fromUriString("https://openlibrary.org/works/"+works_id+".json")
+//        .queryParam("q", "description")
+        .toUriString(); 
 
-                logger.log(Level.INFO, "from id search: "+id);
+                logger.log(Level.INFO, "from id search: "+works_id);
 
                 RequestEntity req=RequestEntity.get(url).build();
                 RestTemplate temple=new RestTemplate();
@@ -135,10 +132,13 @@ public HashMap<String, String> search (String searchTerm){
                 try (InputStream is=new ByteArrayInputStream(body.getBytes())){
                 JsonReader reader= Json.createReader(is);
                 JsonObject result=reader.readObject();
-                JsonArray objInDocs= result.getJsonArray("docs");
+                    
+          /*       JsonArray objInDocs= result.getJsonArray("description").getJsonArray(0);
+                JsonObject objInDes=objInDocs.getJsonObject(0);
 
-                String titleOfBook=(String)objInDocs.getJsonObject(0).getString("title");
-               // String KeyOfBook=(String)objInDocs.getJsonObject(x).getString("key");
+                String titleOfBook=objInDes.getString("title"); */
+                String titleOfBook=result.getString("title");
+                              
                logger.log(Level.INFO, "in id search title is "+titleOfBook);
         
                return titleOfBook;
@@ -182,6 +182,44 @@ public HashMap<String, String> search (String searchTerm){
         }
     }//end getdescription
 
+    public String getExcerpt(String works_id){
+        final String url = UriComponentsBuilder
+        .fromUriString("https://openlibrary.org/works/"+works_id+".json")
+        .queryParam("q", "excerpt")
+        .toUriString(); 
+
+        RequestEntity req=RequestEntity.get(url).build();
+        RestTemplate temple=new RestTemplate();
+        ResponseEntity<String> resp=temple.exchange(req, String.class);
+
+        if (resp.getStatusCode()!=HttpStatus.OK)
+        throw new IllegalArgumentException("Error: status code %s"
+        .formatted(resp.getStatusCode().toString()));
+
+        String body=resp.getBody();
+
+        try (InputStream is=new ByteArrayInputStream(body.getBytes())){
+        JsonReader reader= Json.createReader(is);
+        JsonObject result=reader.readObject();
+
+        JsonArray arrayInExcerpt= result.getJsonArray("key");
     
+        JsonArray arrayinExcerpt2=arrayInExcerpt.getJsonArray(1);
+        
+        JsonObject a= arrayinExcerpt2.getJsonObject(1);
+
+        String excerptOfBook=a.getString("excerpt");
+        
+
+       logger.log(Level.INFO, "excerpt is "+excerptOfBook);
+
+       return excerptOfBook;
+        }
+        catch(Exception e)
+        {e.printStackTrace();
+            return "no excerpt found";
+        }
+    }//end getdescription
+
 
 }

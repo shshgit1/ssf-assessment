@@ -1,6 +1,7 @@
 package tfipssf.assessment.Repository;
 
 import java.io.Serializable;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,7 @@ public class BookRepository implements Serializable {
     Logger logger=Logger.getLogger("from redis repo");
 
     public void save(String Key, String Value){
-        redTemplate.opsForValue().set(Key, Value);
+        redTemplate.opsForValue().set(Key, Value,10,TimeUnit.MINUTES);
     }
     public String retrieve(String Key){
         return redTemplate.opsForValue().get(Key);
