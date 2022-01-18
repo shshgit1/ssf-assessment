@@ -21,6 +21,7 @@ public class BookController {
         ModelObj.addAttribute("title", serviceRest.searchbyID(works_id) );
         ModelObj.addAttribute("description", serviceRest.getDescription(works_id));
         ModelObj.addAttribute("description", serviceRest.getDescription(works_id));
+        ModelObj.addAttribute("checkcache", serviceRest.checkifcache(works_id));
         return "BookDetail" ;       
     }  
 }
